@@ -155,6 +155,7 @@ void MainWindow::matrixSizeChanged(void)
     rowsNum = comboRows->currentIndex() + 1;
     columnsNum = comboColumns->currentIndex() + 1;
     this->placeButtons();
+    this->handleBtClicked();
 }
 
 void MainWindow::handleBtClicked(int bt_id)
