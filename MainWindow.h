@@ -28,6 +28,8 @@ Copyright 2013 Juan Carlos Jiménez Caballero -- www.jcjc-dev.com
 #include <QList>
 #include <QPushButton>
 #include <QSignalMapper>
+#include <QComboBox>
+
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -38,6 +40,7 @@ class MainWindow : public QDialog
 private:
     void createLayout(void);
     void createWidgets(void);
+    void fillSizeCombos(void);
 
     QVBoxLayout *vbMainBox;
     QGridLayout *grButtonsGrid;
@@ -57,6 +60,8 @@ private:
     QString strDisabledSS;
     QString strEnabledSS;
 
+    QComboBox *comboRows;
+    QComboBox *comboColumns;
     QPushButton *btClearButtons;
     QPushButton *btSetButtons;
         
@@ -65,16 +70,18 @@ public:
     ~MainWindow(void);
 
 
-    void binary2hex(int n, char hex[]);
+    void binary2hex(unsigned long n, char hex[]);
     void strrev(char *str);
 
 public slots:
-    void handleBtClicked(int);
+    void placeButtons(void);
+    void handleBtClicked(int bt_id=-1);
     void handleBtClearButtons(void);
     void handleBtSetButtons(void);
+    void matrixSizeChanged(void);
 
 signals:
-    void btClicked(int bt_id=-1);
+    void btClicked(int);
 };
 
 

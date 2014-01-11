@@ -29,5 +29,5 @@ HEADERS += \
     MainWindow.h
 
 RESOURCES += \
-    resources.qrc
+    resources/resources.qrc
 

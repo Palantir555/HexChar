@@ -18,14 +18,17 @@ Copyright 2013 Juan Carlos Jiménez Caballero -- www.jcjc-dev.com
 
 MainWindow::MainWindow(const char *windowTitle)
 {
+    Qt::WindowFlags flags = windowFlags(); //Get the enabled window flags
+    flags |= Qt::WindowMinimizeButtonHint; //Add the minimize button
+    setWindowFlags(flags);                 //Set the new modified window flags
+
     this->setWindowTitle(windowTitle);
 
     rowsNum = 8;
     columnsNum = 8;
-    buttonsNum = rowsNum * columnsNum;
 
     strDisabledSS = QString::fromUtf8("background-color: rgb(255, 255, 255);");
-    strEnabledSS = QString::fromUtf8("background-color: rgb(200, 0, 0);");
+    strEnabledSS = QString::fromUtf8("background-color: rgb(200, 20, 20);");
 
     this->createLayout();
     this->createWidgets();
@@ -45,7 +48,6 @@ void MainWindow::createLayout()
     this->setLayout(vbMainBox);
     vbMainBox->addLayout(grButtonsGrid);
     grButtonsGrid->setContentsMargins(0,0,0,0);
-    grButtonsGrid->addLayout(vbOptions, 0, columnsNum, 0, 100);
     vbMainBox->addLayout(hbOutputBox);
 }
 
@@ -64,6 +66,47 @@ void MainWindow::createWidgets()
     connect(this, SIGNAL(btClicked(int)), this,
             SLOT(handleBtClicked(int)));
 
+    this->placeButtons();
+
+    hbOutputBox->addWidget(lbOutput);
+    this->handleBtClicked(-1);
+
+    /***********************OPTION BUTTONS:**************************/
+    comboRows = new QComboBox();
+    comboColumns = new QComboBox();
+    btClearButtons = new QPushButton(tr("Clear all"));
+    btSetButtons = new QPushButton(tr("Set all"));
+
+    btClearButtons->setAutoDefault(false);
+    btSetButtons->setAutoDefault(false);
+
+    this->fillSizeCombos();
+    vbOptions->addWidget(comboRows);
+    vbOptions->addWidget(comboColumns);
+    vbOptions->addStretch(100);
+    vbOptions->addWidget(btClearButtons);
+    vbOptions->addWidget(btSetButtons);
+
+    connect(comboRows, SIGNAL(currentIndexChanged(int)), this,
+            SLOT(matrixSizeChanged()));
+    connect(comboColumns, SIGNAL(currentIndexChanged(int)), this,
+            SLOT(matrixSizeChanged()));
+    connect(btClearButtons, SIGNAL(released()), this,
+            SLOT(handleBtClearButtons()));
+    connect(btSetButtons, SIGNAL(released()), this,
+            SLOT(handleBtSetButtons()));
+
+}
+
+void MainWindow::placeButtons(void)
+{
+    int i=0;
+    grButtonsGrid->removeItem(vbOptions);
+    while(!lstButtons.isEmpty())    //Delete all the current buttons
+        delete lstButtons.takeFirst();
+    //smButtonsMapper->removeMappings();//necessary??we'll see...#!#
+
+    buttonsNum = columnsNum * rowsNum;
     for(i=0; i<buttonsNum; i++)
     {
         lstButtons.append(new QPushButton());
@@ -74,6 +117,7 @@ void MainWindow::createWidgets()
                 SLOT(map()));
         smButtonsMapper->setMapping(lstButtons.at(i), i);
     }
+
     int c=0, r=0;
     i=0;
     for(c=0; c<columnsNum; c++)
@@ -85,25 +129,32 @@ void MainWindow::createWidgets()
             i++;
         }
     }
+    grButtonsGrid->addLayout(vbOptions, 0, columnsNum, 0, 100);
+}
 
-    hbOutputBox->addWidget(lbOutput);
-    this->handleBtClicked(-1);
+void MainWindow::fillSizeCombos(void)
+{
+    QString str;
+    for(int i=1; i<=10; i++)
+    {
+        str.clear();
+        str.append(tr("Rows: "));
+        str.append(QString::number(i));
+        comboRows->addItem(str);
+        str.clear();
+        str.append(tr("Columns: "));
+        str.append(QString::number(i));
+        comboColumns->addItem(str);
+    }
+    comboRows->setCurrentIndex(rowsNum-1);
+    comboColumns->setCurrentIndex(columnsNum-1);
+}
 
-    /***********************OPTION BUTTONS:**************************/
-    btClearButtons = new QPushButton(tr("Clear all"));
-    btSetButtons = new QPushButton(tr("Set all"));
-    btClearButtons->setAutoDefault(false);
-    btSetButtons->setAutoDefault(false);
-
-    vbOptions->addWidget(btClearButtons);
-    vbOptions->addWidget(btSetButtons);
-    vbOptions->addStretch(100);
-
-    connect(btClearButtons, SIGNAL(released()), this,
-            SLOT(handleBtClearButtons()));
-    connect(btSetButtons, SIGNAL(released()), this,
-            SLOT(handleBtSetButtons()));
-
+void MainWindow::matrixSizeChanged(void)
+{
+    rowsNum = comboRows->currentIndex() + 1;
+    columnsNum = comboColumns->currentIndex() + 1;
+    this->placeButtons();
 }
 
 void MainWindow::handleBtClicked(int bt_id)
@@ -122,12 +173,11 @@ void MainWindow::handleBtClicked(int bt_id)
         }
     }
 
-
     int i=0, c=0, r=0;
-    unsigned int binNum;
+    unsigned long binNum;
     bool ok;
     QString binStr;
-    char hexStr[10];
+    char hexStr[20];
     QString hexQStr;
 
     strOutput->clear();
@@ -182,9 +232,9 @@ void MainWindow::handleBtSetButtons(void)
 
 
 /* Function to convert binary to hexadecimal. http://bit.ly/1e1JSUD */
-void MainWindow::binary2hex(int n, char hex[])
+void MainWindow::binary2hex(unsigned long n, char hex[])
 {
-    int i=0, decimal=0, rem;
+    unsigned long i=0, decimal=0, rem;
     while (n!=0)
     {
         decimal += (n%10)*pow(2,i);
